@@ -1,82 +1,117 @@
 package br.com.alura.panucci
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.datastore.preferences.core.edit
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import br.com.alura.panucci.sampledata.bottomAppBarItems
-import br.com.alura.panucci.sampledata.sampleProductWithImage
-import br.com.alura.panucci.sampledata.sampleProducts
+import androidx.navigation.navOptions
+import br.com.alura.panucci.navigation.PanucciNavHost
+import br.com.alura.panucci.navigation.drinksRoute
+import br.com.alura.panucci.navigation.highlightsRoute
+import br.com.alura.panucci.navigation.menuRoute
+import br.com.alura.panucci.navigation.navigateToAuthentication
+import br.com.alura.panucci.navigation.navigateToBottomAppBarItemSelected
+import br.com.alura.panucci.navigation.navigateToCheckout
+import br.com.alura.panucci.navigation.navigateToDrinks
+import br.com.alura.panucci.navigation.navigateToHighlightsList
+import br.com.alura.panucci.navigation.navigateToMenu
+import br.com.alura.panucci.preferences.dataStore
+import br.com.alura.panucci.preferences.userPreferences
 import br.com.alura.panucci.ui.components.BottomAppBarItem
 import br.com.alura.panucci.ui.components.PanucciBottomAppBar
+import br.com.alura.panucci.ui.components.bottomAppBarItems
 import br.com.alura.panucci.ui.screens.*
 import br.com.alura.panucci.ui.theme.PanucciTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            //val navController = rememberNavController()
-            val initialScreen = "Destaques"
-            val screens = remember {
-                mutableStateListOf(initialScreen)
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val navController = rememberNavController()
+            // LaunchedEffect (coroutine): este escopo não é reexecutado na recomposição .
+            // Usamos o addOnDestinationChangedListener/backQueue para termos a lista
+            // de rotas clicadas
+            LaunchedEffect(Unit) {
+                navController.addOnDestinationChangedListener { _, _, _ ->
+                    navController.backQueue.map {
+                        it.destination.route
+                    }
+                }
             }
-            Log.i("MainActivity", "onCreate: screens ${screens.toList()}")
-            val currentScreen = screens.last()
-            BackHandler(screens.size > 1) {
-                screens.removeLast()
-            }
+            // aqui o codigo que traz o item atual selecionado
+            val backStackEntryState by navController.currentBackStackEntryAsState()
+            val currentDestination = backStackEntryState?.destination
             PanucciTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var selectedItem by remember(currentScreen) {
-                        val item = bottomAppBarItems.find { currentScreen == it.label }
+                    val currentRoute = currentDestination?.route
+                    val selectedItem by remember(currentDestination) {
+                        val item = when (currentRoute) {
+                            highlightsRoute -> BottomAppBarItem.HighLightsList
+                            menuRoute -> BottomAppBarItem.Menu
+                            drinksRoute -> BottomAppBarItem.Drinks
+                            else -> BottomAppBarItem.HighLightsList
+                        }
                         mutableStateOf(item)
                     }
+
+                    val containsInBottomAppBarItems = when (currentRoute) {
+                        highlightsRoute, menuRoute, drinksRoute -> true
+                        else -> false
+                    }
+
+                    val showFab = when (currentDestination?.route) {
+                        menuRoute, drinksRoute -> true
+                        else -> false
+                    }
+
                     PanucciApp(
-                        bottomAppBarItemSelected = selectedItem ?: bottomAppBarItems.first(),
-                        onBottomAppBarItemSelectedChange = {
-                            selectedItem = it
-                            screens.add(it.label)
+                        bottomAppBarItemSelected = selectedItem,
+                        onBottomAppBarItemSelectedChange = {item ->
+                            navController.navigateToBottomAppBarItemSelected(item)
                         },
                         onFabClick = {
-                            screens.add("Pedido")
-                        }) {
-                        when (currentScreen) {
-                            "Destaques" -> HighlightsListScreen(
-                                products = sampleProducts,
-                                onOrderClick = {
-                                    screens.add("Pedido")
-                                },
-                                onProductClick = {
-                                    screens.add("DetalhesProduto")
+                            navController.navigateToCheckout()
+                        },
+                        showTopBar = containsInBottomAppBarItems,
+                        showBottomBar = containsInBottomAppBarItems,
+                        showFab = showFab,
+                        onLogout = {
+                            scope.launch {
+                                context.dataStore.edit {
+                                    it.remove(userPreferences)
                                 }
-                            )
-                            "Menu" -> MenuListScreen(
-                                products = sampleProducts
-                            )
-                            "Bebidas" -> DrinksListScreen(
-                                products = sampleProducts + sampleProducts
-                            )
-                            "DetalhesProduto" -> ProductDetailsScreen(
-                                product = sampleProductWithImage
-                            )
-                            "Pedido" -> CheckoutScreen(products = sampleProducts)
+                            }
+                            navController.navigateToAuthentication()
                         }
+                    ) {
+
+                        PanucciNavHost(
+                            navController = navController,
+                            context = context,
+                            scope = scope
+                        )
                     }
                 }
             }
@@ -91,31 +126,49 @@ fun PanucciApp(
     bottomAppBarItemSelected: BottomAppBarItem = bottomAppBarItems.first(),
     onBottomAppBarItemSelectedChange: (BottomAppBarItem) -> Unit = {},
     onFabClick: () -> Unit = {},
+    onLogout: () -> Unit = {},
+    showTopBar: Boolean = false,
+    showBottomBar: Boolean = false,
+    showFab: Boolean = false,
     content: @Composable () -> Unit
 ) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(text = "Ristorante Panucci")
-                },
-            )
+            if (showTopBar) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(text = "Ristorante Panucci")
+                    },
+                    actions = {
+                        IconButton(onClick = onLogout) {
+                            Icon(
+                                Icons.Filled.ExitToApp,
+                                contentDescription = "sair do app"
+                            )
+                        }
+                    }
+                )
+            }
         },
         bottomBar = {
-            PanucciBottomAppBar(
-                item = bottomAppBarItemSelected,
-                items = bottomAppBarItems,
-                onItemChange = onBottomAppBarItemSelectedChange,
-            )
+            if (showBottomBar) {
+                PanucciBottomAppBar(
+                    item = bottomAppBarItemSelected,
+                    items = bottomAppBarItems,
+                    onItemChange = onBottomAppBarItemSelectedChange,
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onFabClick
-            ) {
-                Icon(
-                    Icons.Filled.PointOfSale,
-                    contentDescription = null
-                )
+            if (showFab) {
+                FloatingActionButton(
+                    onClick = onFabClick
+                ) {
+                    Icon(
+                        Icons.Filled.PointOfSale,
+                        contentDescription = null
+                    )
+                }
             }
         }
     ) {

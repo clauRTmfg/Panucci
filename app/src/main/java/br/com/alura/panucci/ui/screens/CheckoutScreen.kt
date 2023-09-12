@@ -25,7 +25,8 @@ import br.com.alura.panucci.ui.theme.PanucciTheme
 @Composable
 fun CheckoutScreen(
     modifier: Modifier = Modifier,
-    products: List<Product> = emptyList()
+    products: List<Product> = emptyList(),
+    onOrderClick: () -> Unit = {}
 ) {
     Box(
         modifier.fillMaxSize()
@@ -127,7 +128,7 @@ fun CheckoutScreen(
             }
         }
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { onOrderClick() },
             Modifier
                 .padding(
                     16.dp
