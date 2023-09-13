@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,15 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import br.com.alura.panucci.preferences.dataStore
-import br.com.alura.panucci.sampledata.sampleProducts
 import br.com.alura.panucci.ui.screens.HighlightsListScreen
+import br.com.alura.panucci.ui.viewmodels.HighlightsListViewModel
 import kotlinx.coroutines.flow.first
 
 internal const val highlightsRoute = "highlights"
@@ -32,20 +33,22 @@ fun NavGraphBuilder.highlightsList(
 ) {
     // composable é a função onde configuramos uma rota de navegação
     composable(highlightsRoute) {
+        val viewModel = viewModel<HighlightsListViewModel>()
+        val uiState by viewModel.uiState.collectAsState()
         val userPreferences = stringPreferencesKey("usuario_logado")
         var user: String? by remember {
             mutableStateOf(null)
         }
-        var dataState by remember {
-            mutableStateOf("loading")
+        var loginState by remember {
+            mutableStateOf("verifying")
         }
         LaunchedEffect(null) {
             user = context.dataStore.data.first()[userPreferences]
-            dataState = "finished"
+            loginState = "verified"
         }
 
-        when (dataState) {
-            "loading" -> {
+        when (loginState) {
+            "verifying" -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Text(
                         text = "Carregando...",
@@ -57,12 +60,11 @@ fun NavGraphBuilder.highlightsList(
                 }
             }
 
-            "finished" -> {
+            "verified" -> {
                 user?.let {
                     HighlightsListScreen(
-                        products = sampleProducts,
+                        uiState = uiState,
                         onNavigateToDetails = {
-                            // navigate é a função que efetua a navegação
                             navController.navigateToProductDetails(it.id)
                         },
                         onNavigateToCheckout = {
