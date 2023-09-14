@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.alura.panucci.R
-import br.com.alura.panucci.model.Product
 import br.com.alura.panucci.sampledata.sampleProducts
 import br.com.alura.panucci.ui.theme.PanucciTheme
 import br.com.alura.panucci.ui.uistate.ProductDetailsUiState
@@ -36,13 +35,14 @@ import coil.compose.AsyncImage
 fun ProductDetailsScreen(
     uiState: ProductDetailsUiState,
     modifier: Modifier = Modifier,
-    onNavigateToCheckout: () -> Unit = {},
+    onOrderClick: () -> Unit = {},
     onSearchAgain: () -> Unit = {},
-    onBackStack: () -> Unit = {}
+    onBackClick: () -> Unit = {}
 ) {
     when (uiState) {
         ProductDetailsUiState.Failure -> {
-            Column(Modifier.fillMaxSize(),
+            Column(
+                Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -52,16 +52,18 @@ fun ProductDetailsScreen(
                     Text(text = "Buscar novamente")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                TextButton(onClick = onBackStack) {
+                TextButton(onClick = onBackClick) {
                     Text(text = "Voltar")
                 }
             }
         }
+
         ProductDetailsUiState.Loading -> {
             Box(Modifier.fillMaxSize()) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
             }
         }
+
         is ProductDetailsUiState.Success -> {
             val product = uiState.product
             Column(
@@ -91,7 +93,7 @@ fun ProductDetailsScreen(
                     Text(product.description)
                     Button(
                         onClick = {
-                            onNavigateToCheckout()
+                            onOrderClick()
                         },
                         Modifier
                             .fillMaxWidth(),
@@ -108,7 +110,7 @@ fun ProductDetailsScreen(
 
 @Preview
 @Composable
-fun ProductDetailsScreenPreview() {
+fun ProductDetailsScreenWithSuccessStatePreview() {
     PanucciTheme {
         Surface {
             ProductDetailsScreen(
@@ -120,11 +122,23 @@ fun ProductDetailsScreenPreview() {
 
 @Preview
 @Composable
-fun ProductDetailsScreenFailure() {
+fun ProductDetailsScreenWithFailureStatePreview() {
     PanucciTheme {
         Surface {
             ProductDetailsScreen(
                 uiState = ProductDetailsUiState.Failure
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ProductDetailsScreenWithLoadingStatePreview() {
+    PanucciTheme {
+        Surface {
+            ProductDetailsScreen(
+                uiState = ProductDetailsUiState.Loading,
             )
         }
     }

@@ -6,16 +6,17 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import br.com.alura.panucci.ui.screens.ProductDetailsScreen
 import br.com.alura.panucci.ui.viewmodels.ProductDetailsViewModel
-import kotlinx.coroutines.delay
 
 internal const val productDetailsRoute = "productDetails"
 private const val productIdArg = "productId"
 
-fun NavGraphBuilder.productDetails(navController: NavHostController) {
+fun NavGraphBuilder.productDetails(
+    onNavigateToCheckout: () -> Unit,
+    onPopBackStack: () -> Unit
+) {
     composable("$productDetailsRoute/{$productIdArg}")
     {
         it.arguments?.getString(productIdArg)?.let { id ->
@@ -26,17 +27,11 @@ fun NavGraphBuilder.productDetails(navController: NavHostController) {
             }
             ProductDetailsScreen(
                 uiState = uiState,
-                onNavigateToCheckout = {
-                    navController.navigateToCheckout()
-                },
-                onSearchAgain = {
-                    viewModel.findProductById(id)
-                },
-                onBackStack = {
-                    navController.navigateUp()
-                })
+                onOrderClick = onNavigateToCheckout,
+                onSearchAgain = { viewModel.findProductById(id) },
+                onBackClick = onPopBackStack)
         } ?: LaunchedEffect(Unit) {
-            navController.navigateUp()
+            onPopBackStack()
         }
     }
 }

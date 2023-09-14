@@ -18,18 +18,21 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import br.com.alura.panucci.model.Product
 import br.com.alura.panucci.preferences.dataStore
 import br.com.alura.panucci.ui.screens.HighlightsListScreen
 import br.com.alura.panucci.ui.viewmodels.HighlightsListViewModel
 import kotlinx.coroutines.flow.first
 
 internal const val highlightsRoute = "highlights"
+
 fun NavGraphBuilder.highlightsList(
     context: Context,
-    navController: NavHostController
+    onNavigateToCheckout: () -> Unit,
+    onNavigateToProductDetails: (Product) -> Unit,
+    login: () -> Unit
 ) {
     // composable é a função onde configuramos uma rota de navegação
     composable(highlightsRoute) {
@@ -64,14 +67,12 @@ fun NavGraphBuilder.highlightsList(
                 user?.let {
                     HighlightsListScreen(
                         uiState = uiState,
-                        onNavigateToDetails = {
-                            navController.navigateToProductDetails(it.id)
-                        },
-                        onNavigateToCheckout = {
-                            navController.navigateToCheckout()
-                        })
+                        onProductClick = onNavigateToProductDetails,
+                        onOrderClick = onNavigateToCheckout,
+                        )
                 } ?: LaunchedEffect(null) {
-                    navController.navigateToAuthentication()
+                    //navController.navigateToAuthentication()
+                    login()
                 }
             }
         }

@@ -19,10 +19,26 @@ fun PanucciNavHost(navController: NavHostController, context: Context, scope: Co
         navController = navController,
         startDestination = homeGraphRoute
     ) {
-        homeGraph(context, navController)
+        homeGraph(
+            context,
+            onNavigateToCheckout = { navController.navigateToCheckout() },
+            onNavigateToProductDetails = { product ->
+                navController.navigateToProductDetails(product.id)
+            },
+            login = { navController.navigateToAuthentication()}
+        )
+        productDetails(
+            onNavigateToCheckout = {
+                navController.navigateToCheckout()
+            },
+            onPopBackStack = {
+                navController.navigateUp()
+            },
+        )
+        checkout(
+            onPopBackStack = { navController.navigateUp() },
+        )
         authentication(scope, context, navController)
-        productDetails(navController)
-        checkout(navController)
     }
 }
 
