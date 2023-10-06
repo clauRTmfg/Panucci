@@ -18,7 +18,7 @@ internal const val authenticationRoute = "authentication"
 fun NavGraphBuilder.authentication(
     scope: CoroutineScope,
     context: Context,
-    navController: NavHostController
+    navigateToHighlightsList: () -> Unit = {}
 ) {
     // composable é a função onde configuramos uma rota de navegação
     composable(authenticationRoute) {
@@ -29,9 +29,7 @@ fun NavGraphBuilder.authentication(
                         it[userPreferences] = user
                     }
                 }
-                navController.navigateToHighlightsList(navOptions {
-                    popUpTo(navController.graph.id)
-                })
+                navigateToHighlightsList()
             }
         )
     }

@@ -64,7 +64,9 @@ fun ProductDetailsScreen(
             }
         }
 
+        // este "is" não foi explicado no curso...
         is ProductDetailsUiState.Success -> {
+            // este acesso ao product não ficou claro mesmo revendo o curso
             val product = uiState.product
             Column(
                 modifier

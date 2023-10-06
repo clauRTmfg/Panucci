@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
@@ -13,7 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -51,9 +54,26 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            // aqui o codigo que traz o item atual selecionado
+
             val backStackEntryState by navController.currentBackStackEntryAsState()
+            val orderDoneMsg = backStackEntryState
+                ?.savedStateHandle
+                ?.getStateFlow<String?>("order_done", null)
+                ?.collectAsState()
+            //backStackEntryState?.savedStateHandle?.remove<String?>("order_done")
+
+            // aqui o codigo que traz o item atual selecionado
             val currentDestination = backStackEntryState?.destination
+
+            val snackbarHostState = remember {
+                SnackbarHostState()
+            }
+            orderDoneMsg?.value?.let {
+                scope.launch {
+                    snackbarHostState.showSnackbar(message = it)
+                }
+            }
+
             PanucciTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -81,8 +101,9 @@ class MainActivity : ComponentActivity() {
                     }
 
                     PanucciApp(
+                        snackbarHostState = snackbarHostState,
                         bottomAppBarItemSelected = selectedItem,
-                        onBottomAppBarItemSelectedChange = {item ->
+                        onBottomAppBarItemSelectedChange = { item ->
                             navController.navigateToBottomAppBarItemSelected(item)
                         },
                         onFabClick = {
@@ -124,9 +145,20 @@ fun PanucciApp(
     showTopBar: Boolean = false,
     showBottomBar: Boolean = false,
     showFab: Boolean = false,
+    snackbarHostState: SnackbarHostState = SnackbarHostState(),
+    // importante : o content de um Scaffold precisa ser o último parâmetro
     content: @Composable () -> Unit
 ) {
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) {
+                Snackbar(Modifier.padding(8.dp)) {
+                    Text(text = it.visuals.message,
+                        Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center)
+                }
+            }
+        },
         topBar = {
             if (showTopBar) {
                 CenterAlignedTopAppBar(
@@ -179,7 +211,7 @@ fun PanucciApp(
 private fun PanucciAppPreview() {
     PanucciTheme {
         Surface {
-            PanucciApp {}
+            PanucciApp(content = {})
         }
     }
 }

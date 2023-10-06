@@ -11,6 +11,7 @@ import androidx.navigation.navigation
 import br.com.alura.panucci.ui.components.BottomAppBarItem
 import kotlinx.coroutines.CoroutineScope
 
+internal const val uri = "alura://panucci.com.br"
 @Composable
 fun PanucciNavHost(navController: NavHostController, context: Context, scope: CoroutineScope) {
 
@@ -25,7 +26,7 @@ fun PanucciNavHost(navController: NavHostController, context: Context, scope: Co
             onNavigateToProductDetails = { product ->
                 navController.navigateToProductDetails(product.id)
             },
-            login = { navController.navigateToAuthentication()}
+            login = { navController.navigateToAuthentication() }
         )
         productDetails(
             onNavigateToCheckout = {
@@ -36,9 +37,23 @@ fun PanucciNavHost(navController: NavHostController, context: Context, scope: Co
             },
         )
         checkout(
-            onPopBackStack = { navController.navigateUp() },
+            onPopBackStack = {
+                navController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.set("order_done", "Pedido realizado com sucesso 👍😊")
+                navController.navigateUp()
+            },
         )
-        authentication(scope, context, navController)
+
+        authentication(
+            scope,
+            context,
+            navigateToHighlightsList = {
+                navController.navigateToHighlightsList(navOptions {
+                    popUpTo(navController.graph.id)
+                })
+            }
+        )
     }
 }
 

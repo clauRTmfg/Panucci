@@ -24,6 +24,7 @@ import br.com.alura.panucci.model.Product
 import br.com.alura.panucci.preferences.dataStore
 import br.com.alura.panucci.ui.screens.HighlightsListScreen
 import br.com.alura.panucci.ui.viewmodels.HighlightsListViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 internal const val highlightsRoute = "highlights"
@@ -42,9 +43,12 @@ fun NavGraphBuilder.highlightsList(
         var user: String? by remember {
             mutableStateOf(null)
         }
+
         var loginState by remember {
             mutableStateOf("verifying")
         }
+
+
         LaunchedEffect(null) {
             user = context.dataStore.data.first()[userPreferences]
             loginState = "verified"

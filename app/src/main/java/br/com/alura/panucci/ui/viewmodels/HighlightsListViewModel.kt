@@ -21,6 +21,7 @@ class HighlightsListViewModel(
     init {
         viewModelScope.launch {
             dao.products
+                // este código é apenas para testes de falhas
 //                .map { p ->
 //                    p.map {
 //                        it.copy(
