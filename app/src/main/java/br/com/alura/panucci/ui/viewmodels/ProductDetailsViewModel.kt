@@ -11,6 +11,7 @@ import br.com.alura.panucci.dao.ProductDao
 import br.com.alura.panucci.navigation.productIdArg
 import br.com.alura.panucci.navigation.promoCodeArg
 import br.com.alura.panucci.ui.uistate.ProductDetailsUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -36,10 +37,12 @@ class ProductDetailsViewModel(
                 "PANUCCI10" -> BigDecimal("0.1")
                 else -> BigDecimal.ZERO
             }
+            delay(2000)
             savedStateHandle.getStateFlow<String?>(productIdArg, null)
                 .filterNotNull()
                 .collect {id ->
-                    findProductById(id)
+                    findProductById("0")
+                    //findProductById(id)
                 }
         }
     }

@@ -13,7 +13,7 @@ import br.com.alura.panucci.ui.viewmodels.ProductDetailsViewModel
 
 // não é bem explicado no curso o uso de "internal",
 // é um modificador que restringe mais  o uso da variável
-private const val productDetailsRoute = "productDetails"
+internal const val productDetailsRoute = "productDetails"
 internal const val productIdArg = "productId"
 internal const val promoCodeArg = "promoCode"
 

@@ -32,7 +32,7 @@ import br.com.alura.panucci.ui.theme.PanucciTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthenticationScreen(
-    onEnterClick: (String) -> Unit = {}
+    onEnterUserClick: (String) -> Unit = {}
 ) {
     Column(
         Modifier
@@ -95,7 +95,7 @@ fun AuthenticationScreen(
             }
         )
         Button(
-            onClick = { onEnterClick(user) },
+            onClick = { onEnterUserClick(user) },
             Modifier
                 .padding(
                     top = 8.dp,

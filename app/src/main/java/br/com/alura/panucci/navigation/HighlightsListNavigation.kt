@@ -75,7 +75,6 @@ fun NavGraphBuilder.highlightsList(
                         onOrderClick = onNavigateToCheckout,
                         )
                 } ?: LaunchedEffect(null) {
-                    //navController.navigateToAuthentication()
                     login()
                 }
             }

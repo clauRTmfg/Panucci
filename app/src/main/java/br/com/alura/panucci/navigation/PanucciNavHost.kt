@@ -1,19 +1,26 @@
 package br.com.alura.panucci.navigation
 
-import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.datastore.preferences.core.edit
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navOptions
-import androidx.navigation.navigation
-import br.com.alura.panucci.ui.components.BottomAppBarItem
+import br.com.alura.panucci.preferences.dataStore
+import br.com.alura.panucci.preferences.userPreferences
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 internal const val uri = "alura://panucci.com.br"
+
 @Composable
-fun PanucciNavHost(navController: NavHostController, context: Context, scope: CoroutineScope) {
+fun PanucciNavHost(
+    navController: NavHostController
+) {
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     // NavHost é responsável por configurar o gráfico de navegação
     NavHost(
@@ -46,9 +53,12 @@ fun PanucciNavHost(navController: NavHostController, context: Context, scope: Co
         )
 
         authentication(
-            scope,
-            context,
-            navigateToHighlightsList = {
+            onEnterUserClick = { user ->
+                scope.launch {
+                    context.dataStore.edit {
+                        it[userPreferences] = user
+                    }
+                }
                 navController.navigateToHighlightsList(navOptions {
                     popUpTo(navController.graph.id)
                 })
